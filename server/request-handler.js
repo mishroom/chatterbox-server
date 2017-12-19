@@ -89,14 +89,14 @@ var requestHandler = function(request, response) {
   if (request.method === 'POST' ) {
     
     request.on('data', (chunk) => {
-      responseBody.results.push(chunk);
-      console.log("chunk in POST: ", chunk.toString());
+      responseBody.results.push(chunk.toString());
+      // console.log("chunk in POST: ", Buffer(chunk));
       
     }).on('end', () => {
-      console.log("results in POST: ",responseBody.results.toString());
+      console.log("results in POST: ",responseBody.results);
       // responseBody.results = Buffer.concat(responseBody.results).toString();
       
-      response.end(Buffer.concat(responseBody.results).toString());
+      response.end((responseBody.results).toString());
     });
     
   } else if (request.method === 'GET' ) {
@@ -104,13 +104,14 @@ var requestHandler = function(request, response) {
     request.on('data', (chunk) => {
       
     }).on('end', () => {
-      console.log("results in GET: ", responseBody.results.toString());
+      console.log("results in GET: ", responseBody.results);
+      // console.log("PARSE TEST", JSON.parse(responseBody.results));
       //responseBody.results = Buffer.concat(responseBody.results).toString();
-      console.log((responseBody.results).toString());
-      response.end(Buffer.concat(responseBody.results).toString());
+      //console.log((responseBody.results).toString());
+      response.end((responseBody.results).toString());
     });
     response.write(JSON.stringify(responseBody));
-    response.end();
+    // response.end();
     
   } else {
     response.statusCode = 404;
