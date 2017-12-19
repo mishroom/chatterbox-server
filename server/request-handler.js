@@ -28,10 +28,17 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10 // Seconds.
 };
-
+var responseBody = {results: []};
+    
 var requestHandler = function(request, response) {
-  
-  request.url = 'http://parse.sfs.hackreactor.com/chatterbox/classes/messages';
+  if (request.url !== "/classes/messages"){
+    var statusCode = 404;
+  } else if (request.method === 'GET') {
+    var statusCode = 200;
+  } else if (request.method === 'POST') {
+    var statusCode = 201; 
+  }
+  // request.url = 'http://parse.sfs.hackreactor.com/chatterbox/classes/messages';
   //console.log("request=====>", request);
   //console.log("response=====>", response);
   
@@ -55,11 +62,7 @@ var requestHandler = function(request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   // The outgoing status.
-  if (request.method === 'GET') {
-    var statusCode = 200;
-  } else if (request.method === 'POST') {
-    var statusCode = 201; 
-  } 
+  
   
 
   // See the note below about CORS headers.
@@ -83,39 +86,37 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
 
-  var responseBody = {};
-  responseBody.results = [];
-  
- 
-  request.on('error', (err) =>{
-    console.error(err);
-  }).on('data', (chunk) => {
-    console.log("data", chunk.toString());
-    responseBody.results.push(chunk);
-    // response.write(JSON.stringify(responseBody));
-    // response.end();
-  }).on('end', () => {
+  if (request.method === 'POST' ) {
     
-    if (request.method === 'GET') { 
-        // console.log("In GET=====>",JSON.stringify(request.IncomingMessage))
-        response.write(JSON.stringify(responseBody));
-        response.end();
+    request.on('data', (chunk) => {
+      responseBody.results.push(chunk);
+      console.log("chunk in POST: ", chunk.toString());
       
-    } else if (request.method === 'POST') {
-     
-      // console.log("In POST=====>",JSON.stringify(request.IncomingMessage));
-      response.write(JSON.stringify(responseBody));
-      response.end();
-      //console.log("Message_received_from_client:", JSON.stringify(responseBody.results));
-    } else {
-      response.statusCode = 404;
-      response.end();
-    }
-        
-  }); 
+    }).on('end', () => {
+      console.log("results in POST: ",responseBody.results.toString());
+      // responseBody.results = Buffer.concat(responseBody.results).toString();
+      
+      response.end(Buffer.concat(responseBody.results).toString());
+    });
+    
+  } else if (request.method === 'GET' ) {
+  
+    request.on('data', (chunk) => {
+      
+    }).on('end', () => {
+      console.log("results in GET: ", responseBody.results.toString());
+      //responseBody.results = Buffer.concat(responseBody.results).toString();
+      console.log((responseBody.results).toString());
+      response.end(Buffer.concat(responseBody.results).toString());
+    });
+    response.write(JSON.stringify(responseBody));
+    response.end();
+    
+  } else {
+    response.statusCode = 404;
+    response.end();
+  }
+
 
 };
-
-
-
 exports.handleRequest = requestHandler;
