@@ -12,7 +12,14 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+
 var requestHandler = function(request, response) {
+  // const {headers, method} = request;
+  request.url = 'http://parse.sfs.hackreactor.com/chatterbox/classes/messages';
+ 
+
+ 
+
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -53,6 +60,16 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   response.end('Hello, World!');
+   
+  request.on('error', (err) =>{
+    console.error(err);
+  }).on('data', (chunk) => {
+    console.log('data', chunk);
+  }).on('end', () => {
+    console.log('end');
+  }); 
+  
+  
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -71,3 +88,4 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+exports.handleRequest = requestHandler;
