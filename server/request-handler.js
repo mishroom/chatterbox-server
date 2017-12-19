@@ -32,9 +32,10 @@ var defaultCorsHeaders = {
 var requestHandler = function(request, response) {
   
   request.url = 'http://parse.sfs.hackreactor.com/chatterbox/classes/messages';
-  const { method} = request;
- 
-
+  //console.log("request=====>", request);
+  //console.log("response=====>", response);
+  
+  const {method} = request;
  
 
   // Request and Response come from node's http module.
@@ -54,7 +55,12 @@ var requestHandler = function(request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   // The outgoing status.
-  var statusCode = 200;
+  if (request.method === 'GET') {
+    var statusCode = 200;
+  } else if (request.method === 'POST') {
+    var statusCode = 201; 
+  } 
+  
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -76,24 +82,38 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
+
+  var responseBody = {};
+  responseBody.results = [];
   
-   
+ 
   request.on('error', (err) =>{
     console.error(err);
   }).on('data', (chunk) => {
-    console.log('data', chunk.toString());
+    console.log("data", chunk.toString());
+    responseBody.results.push(chunk);
+    // response.write(JSON.stringify(responseBody));
+    // response.end();
   }).on('end', () => {
     
-    
-    var responseBody = { method};
-    
-    response.write(JSON.stringify(responseBody));
-    
-    response.end();
-    
+    if (request.method === 'GET') { 
+        // console.log("In GET=====>",JSON.stringify(request.IncomingMessage))
+        response.write(JSON.stringify(responseBody));
+        response.end();
+      
+    } else if (request.method === 'POST') {
+     
+      // console.log("In POST=====>",JSON.stringify(request.IncomingMessage));
+      response.write(JSON.stringify(responseBody));
+      response.end();
+      //console.log("Message_received_from_client:", JSON.stringify(responseBody.results));
+    } else {
+      response.statusCode = 404;
+      response.end();
+    }
+        
   }); 
-  
-  
+
 };
 
 
